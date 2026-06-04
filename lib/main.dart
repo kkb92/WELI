@@ -471,72 +471,72 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           const SizedBox(height: 28),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 14,
-                            runSpacing: 14,
+                          Row(
                             children: [
-                              for (int i = 3; i <= 5; i++)
-                                SizedBox(
-                                  width: 112,
-                                  height: 116,
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      // Setze die ausgewählte Spieleranzahl
-                                      setState(() {
-                                        selectedPlayerCount = i;
-                                      });
+                              for (int i = 3; i <= 5; i++) ...[
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 104,
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        // Setze die ausgewählte Spieleranzahl
+                                        setState(() {
+                                          selectedPlayerCount = i;
+                                        });
 
-                                      // Lasse die Spieler benennen
-                                      await _getPlayersNames(i);
+                                        // Lasse die Spieler benennen
+                                        await _getPlayersNames(i);
 
-                                      // Navigiere zur nächsten Seite
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PlayersTablePage(players),
-                                        ),
-                                      );
-                                    },
-                                    style: appButtonStyle(
-                                      backgroundColor: selectedPlayerCount == i
-                                          ? AppPalette.primary
-                                          : AppPalette.surface,
-                                      foregroundColor: selectedPlayerCount == i
-                                          ? Colors.white
-                                          : AppPalette.textPrimary,
-                                      borderColor: selectedPlayerCount == i
-                                          ? AppPalette.primary
-                                          : AppPalette.border,
-                                      radius: 22,
-                                      elevation: selectedPlayerCount == i ? 8 : 0,
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          '$i',
-                                          style: const TextStyle(
-                                            fontSize: 40,
-                                            fontWeight: FontWeight.w900,
+                                        // Navigiere zur nächsten Seite
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PlayersTablePage(players),
                                           ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Spieler',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
-                                            color: selectedPlayerCount == i
-                                                ? Colors.white.withOpacity(0.82)
-                                                : AppPalette.textSecondary,
+                                        );
+                                      },
+                                      style: appButtonStyle(
+                                        backgroundColor: selectedPlayerCount == i
+                                            ? AppPalette.primary
+                                            : AppPalette.surface,
+                                        foregroundColor: selectedPlayerCount == i
+                                            ? Colors.white
+                                            : AppPalette.textPrimary,
+                                        borderColor: selectedPlayerCount == i
+                                            ? AppPalette.primary
+                                            : AppPalette.border,
+                                        radius: 20,
+                                        elevation: selectedPlayerCount == i ? 8 : 0,
+                                        padding: EdgeInsets.zero,
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            '$i',
+                                            style: const TextStyle(
+                                              fontSize: 36,
+                                              fontWeight: FontWeight.w900,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Spieler',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: selectedPlayerCount == i
+                                                  ? Colors.white.withOpacity(0.82)
+                                                  : AppPalette.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
+                                if (i < 5) const SizedBox(width: 8),
+                              ],
                             ],
                           ),
                         ],
@@ -981,7 +981,7 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
           ),
           content: Text(
             allDebtsPaid
-                ? 'Alle Schulden sind erledigt. Das Spiel wird nur in die Statistik übernommen und der aktuelle Spielstand gelöscht.'
+                ? 'Alle Schulden sind erledigt. Das Spiel wird dauerhaft gelöscht und nicht mehr in der Statistik angezeigt.'
                 : 'Das Spiel wird mit dem aktuellen Stand gespeichert. Du kannst es später fortsetzen.',
           ),
           actions: [
@@ -1008,7 +1008,6 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
     }
 
     if (allDebtsPaid) {
-      await _saveGameToHistory('finished');
       await _clearSavedGame();
     } else {
       await _saveGameAsResumable();
@@ -1196,6 +1195,19 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
     await WeliStorage.setString(gameHistoryStorageKey, jsonEncode(history));
   }
 
+  Future<void> _deleteHistoryGame(int historyIndex) async {
+    final historyText = await WeliStorage.getString(gameHistoryStorageKey);
+    if (historyText == null || historyText.isEmpty) {
+      return;
+    }
+    final List<dynamic> history = jsonDecode(historyText) as List<dynamic>;
+    if (historyIndex < 0 || historyIndex >= history.length) {
+      return;
+    }
+    history.removeAt(historyIndex);
+    await WeliStorage.setString(gameHistoryStorageKey, jsonEncode(history));
+  }
+
   void _showHistoricalGameDetails(Map<String, dynamic> game, int historyIndex) {
     String selectedMultiplier = '0.05';
     final totals = Map<String, int>.from(game['finalTotals'] as Map? ?? {});
@@ -1219,6 +1231,17 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                 game['paidDebtKeys'] = paidKeys.toList();
               });
               _updateHistoryPaidDebtKeys(historyIndex, paidKeys);
+
+              final allDebtKeys = _debtKeysForTotals(totals, selectedMultiplier);
+              if (allDebtKeys.isNotEmpty && allDebtKeys.every((debtKey) => paidKeys.contains(debtKey))) {
+                _deleteHistoryGame(historyIndex);
+                Navigator.pop(context);
+                if (mounted) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(content: Text('Alle Schulden erledigt – Spiel wurde dauerhaft gelöscht')),
+                  );
+                }
+              }
             }
 
             return Dialog(
@@ -1400,13 +1423,6 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
       return '${entries.first.key} (${entries.first.value}x)';
     }
 
-    final averageRows = totalPoints.entries.map((entry) {
-      final count = gameCounts[entry.key] ?? 1;
-      final average = entry.value / count;
-      return '${entry.key}: ${average.toStringAsFixed(1)} Punkte';
-    }).toList()
-      ..sort();
-
     final latestHistoryEntries = history.asMap().entries.toList().reversed.take(8).toList();
 
     showDialog(
@@ -1433,9 +1449,6 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                   Text('Wer hat einzelne Runden am häufigsten gewonnen: ${topEntry(roundWins)}'),
                   Text('Zahlinger Manfred: ${topEntry(mostPaying)}'),
                   Text('Längstes Spiel: $longestGame Runden'),
-                  const SizedBox(height: 14),
-                  const Text('Durchschnittliche Punkte', style: TextStyle(fontWeight: FontWeight.w900)),
-                  ...averageRows.map((row) => Text(row)),
                   const SizedBox(height: 14),
                   const Text('Fortsetzbare Spiele', style: TextStyle(fontWeight: FontWeight.w900)),
                   if (resumableGames.isEmpty)
