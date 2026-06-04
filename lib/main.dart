@@ -688,9 +688,9 @@ class _HomePageState extends State<HomePage> {
                           onPressed: isUsed
                               ? null
                               : () {
-                                  FocusScope.of(context).unfocus();
-                                  Navigator.pop(context, name);
-                                },
+                            FocusScope.of(context).unfocus();
+                            Navigator.pop(context, name);
+                          },
                         );
                       }).toList(),
                     ),
@@ -748,14 +748,14 @@ class PlayersTablePage extends StatefulWidget {
   final Set<String> initialPaidDebtKeys;
 
   PlayersTablePage(
-    this.players, {
-    this.initialRoundNumber = 1,
-    this.initialCurrentRound = 1,
-    List<RoundResult>? initialRoundResults,
-    this.initialSelectedDropdownIndex,
-    this.initialMultiplierIndex = 0,
-    Set<String>? initialPaidDebtKeys,
-  })  : initialRoundResults = initialRoundResults ?? [],
+      this.players, {
+        this.initialRoundNumber = 1,
+        this.initialCurrentRound = 1,
+        List<RoundResult>? initialRoundResults,
+        this.initialSelectedDropdownIndex,
+        this.initialMultiplierIndex = 0,
+        Set<String>? initialPaidDebtKeys,
+      })  : initialRoundResults = initialRoundResults ?? [],
         initialPaidDebtKeys = initialPaidDebtKeys ?? {};
 
   @override
@@ -1196,9 +1196,9 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                         },
                         items: <String>['0.05', '0.10', '0.15', '0.20']
                             .map((value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text('$value Cent'),
-                                ))
+                          value: value,
+                          child: Text('$value Cent'),
+                        ))
                             .toList(),
                       ),
                       ..._buildDebtRowsFromTotals(
@@ -1210,11 +1210,11 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                       const SizedBox(height: 16),
                       const Text('Rundenergebnisse', style: TextStyle(fontWeight: FontWeight.w900)),
                       ...roundResults.map((round) => Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              'Runde ${round.roundNumber}: ${round.playerPoints.entries.map((entry) => '${entry.key} ${entry.value < 0 ? 0 : entry.value}').join(', ')}',
-                            ),
-                          )),
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Runde ${round.roundNumber}: ${round.playerPoints.entries.map((entry) => '${entry.key} ${entry.value < 0 ? 0 : entry.value}').join(', ')}',
+                        ),
+                      )),
                       const SizedBox(height: 16),
                       Align(
                         alignment: Alignment.center,
@@ -2026,101 +2026,101 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                   Expanded(
                     child: selectedDropdownPlayer != null
                         ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: AppPalette.surface,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: AppPalette.border),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.radio_button_checked,
-                                    color: AppPalette.danger, size: 16),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    selectedDropdownPlayer!.name,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppPalette.textPrimary,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : Container(
-                            height: 46,
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: BoxDecoration(
-                              color: AppPalette.surface,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: AppPalette.border),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<Player>(
-                                value: selectedDropdownPlayer,
-                                hint: const Text(
-                                  'Startspieler wählen',
-                                  style: TextStyle(
-                                    color: AppPalette.textSecondary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                isExpanded: true,
-                                onChanged: (Player? newValue) {
-                                  setState(() {
-                                    // Setze den ausgewählten Spieler im Dropdown-Menü
-                                    selectedDropdownPlayer = newValue;
-
-                                    // Setze isSelected für alle Spieler zurück
-                                    for (var player in widget.players) {
-                                      player.isSelected = false;
-                                    }
-
-                                    // Setze isSelected nur für den ausgewählten Spieler
-                                    if (newValue != null) {
-                                      newValue.isSelected = true;
-
-                                      // Aktualisiere den roten Punkt für den ausgewählten Spieler im GridView
-                                      for (var player in widget.players) {
-                                        player.hasRedDot = (player == newValue);
-                                      }
-                                    }
-                                  });
-                                  _saveGameState();
-                                },
-                                items: widget.players.map<DropdownMenuItem<Player>>((Player player) {
-                                  return DropdownMenuItem<Player>(
-                                    value: player,
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.person_outline,
-                                          color: player.isSelected
-                                              ? AppPalette.danger
-                                              : AppPalette.textSecondary,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          player.name,
-                                          style: TextStyle(
-                                            color: player.isSelected
-                                                ? AppPalette.danger
-                                                : AppPalette.textPrimary,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppPalette.surface,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppPalette.border),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.radio_button_checked,
+                              color: AppPalette.danger, size: 16),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              selectedDropdownPlayer!.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppPalette.textPrimary,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                    )
+                        : Container(
+                      height: 46,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: AppPalette.surface,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppPalette.border),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<Player>(
+                          value: selectedDropdownPlayer,
+                          hint: const Text(
+                            'Startspieler wählen',
+                            style: TextStyle(
+                              color: AppPalette.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          isExpanded: true,
+                          onChanged: (Player? newValue) {
+                            setState(() {
+                              // Setze den ausgewählten Spieler im Dropdown-Menü
+                              selectedDropdownPlayer = newValue;
+
+                              // Setze isSelected für alle Spieler zurück
+                              for (var player in widget.players) {
+                                player.isSelected = false;
+                              }
+
+                              // Setze isSelected nur für den ausgewählten Spieler
+                              if (newValue != null) {
+                                newValue.isSelected = true;
+
+                                // Aktualisiere den roten Punkt für den ausgewählten Spieler im GridView
+                                for (var player in widget.players) {
+                                  player.hasRedDot = (player == newValue);
+                                }
+                              }
+                            });
+                            _saveGameState();
+                          },
+                          items: widget.players.map<DropdownMenuItem<Player>>((Player player) {
+                            return DropdownMenuItem<Player>(
+                              value: player,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.person_outline,
+                                    color: player.isSelected
+                                        ? AppPalette.danger
+                                        : AppPalette.textSecondary,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    player.name,
+                                    style: TextStyle(
+                                      color: player.isSelected
+                                          ? AppPalette.danger
+                                          : AppPalette.textPrimary,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -2243,65 +2243,68 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                                   ),
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 42, 8, 10),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      '${currentPlayer.points}',
-                                      style: const TextStyle(
-                                        color: AppPalette.textPrimary,
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 31,
-                                        height: 1,
+                              Positioned.fill(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(8, 42, 8, 10),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '${currentPlayer.points}',
+                                        style: const TextStyle(
+                                          color: AppPalette.textPrimary,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 31,
+                                          height: 1,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: AppPalette.background,
-                                        borderRadius: BorderRadius.circular(999),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            '$lastRoundResult',
-                                            style: const TextStyle(
-                                              color: AppPalette.textSecondary,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w800,
+                                      const SizedBox(height: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: AppPalette.background,
+                                          borderRadius: BorderRadius.circular(999),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '$lastRoundResult',
+                                              style: const TextStyle(
+                                                color: AppPalette.textSecondary,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            '${calculateTotalPointsPerPlayer()[currentPlayer.name]}',
-                                            style: const TextStyle(
-                                              color: AppPalette.primary,
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w900,
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '${calculateTotalPointsPerPlayer()[currentPlayer.name]}',
+                                              style: const TextStyle(
+                                                color: AppPalette.primary,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w900,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      currentPlayer.name,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      style: TextStyle(
-                                        color: selectedDropdownPlayer == currentPlayer
-                                            ? AppPalette.danger
-                                            : AppPalette.textPrimary,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w900,
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        currentPlayer.name,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          color: selectedDropdownPlayer == currentPlayer
+                                              ? AppPalette.danger
+                                              : AppPalette.textPrimary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
