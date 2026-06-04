@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'dart:convert';
 import 'storage/weli_storage.dart';
+import 'storage/navigation_guard.dart';
 
 
 class AppPalette {
@@ -61,6 +62,7 @@ const String gameHistoryStorageKey = 'weli_game_history';
 
 
 void main() {
+  installNavigationGuard();
   runApp(MyApp());
 }
 
@@ -362,7 +364,26 @@ class _HomePageState extends State<HomePage> {
                     child: ListTile(
                       title: Text('$dateText · $playerCount Spieler'),
                       subtitle: Text(playerNames),
-                      trailing: const Icon(Icons.play_arrow),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Löschen',
+                            icon: const Icon(Icons.delete_outline, color: AppPalette.danger),
+                            onPressed: () async {
+                              resumableGames.removeAt(entry.key);
+                              await WeliStorage.setString(resumableGamesStorageKey, jsonEncode(resumableGames));
+                              if (mounted) {
+                                Navigator.pop(dialogContext);
+                                if (resumableGames.isNotEmpty) {
+                                  _showResumableGamesDialog();
+                                }
+                              }
+                            },
+                          ),
+                          const Icon(Icons.play_arrow),
+                        ],
+                      ),
                       onTap: () async {
                         resumableGames.removeAt(entry.key);
                         await WeliStorage.setString(resumableGamesStorageKey, jsonEncode(resumableGames));
@@ -826,6 +847,34 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
     });
   }
 
+  void _openSavedGameData(Map<String, dynamic> data) {
+    final savedPlayers = (data['players'] as List<dynamic>? ?? [])
+        .map((item) => Player.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+    final savedRoundResults = (data['roundResults'] as List<dynamic>? ?? [])
+        .map((item) => RoundResult.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+
+    if (savedPlayers.isEmpty) {
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlayersTablePage(
+          savedPlayers,
+          initialRoundNumber: data['roundNumber'] as int? ?? 1,
+          initialCurrentRound: data['currentRound'] as int? ?? 1,
+          initialRoundResults: savedRoundResults,
+          initialSelectedDropdownIndex: data['selectedDropdownIndex'] as int?,
+          initialMultiplierIndex: data['selectedMultiplierIndex'] as int? ?? 0,
+          initialPaidDebtKeys: Set<String>.from(data['paidDebtKeys'] as List? ?? []),
+        ),
+      ),
+    );
+  }
+
   int _selectedDropdownPlayerIndex() {
     if (selectedDropdownPlayer == null) {
       return -1;
@@ -872,6 +921,16 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
     }
 
     await WeliStorage.setString(resumableGamesStorageKey, jsonEncode(resumableGames));
+  }
+
+  Future<void> _saveCurrentGameSnapshot() async {
+    await _saveGameAsResumable();
+    await _saveGameState();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Spielstand gespeichert')),
+      );
+    }
   }
 
   double _highestDebtFromTotals(Map<String, int> totals) {
@@ -1393,6 +1452,32 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                           dense: true,
                           title: Text('${_formatDate(game['savedAt'] as String?)} · $playerCount Spieler'),
                           subtitle: Text(names),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: 'Löschen',
+                                icon: const Icon(Icons.delete_outline, color: AppPalette.danger),
+                                onPressed: () async {
+                                  resumableGames.removeAt(entry.key);
+                                  await WeliStorage.setString(resumableGamesStorageKey, jsonEncode(resumableGames));
+                                  if (mounted) {
+                                    Navigator.pop(context);
+                                    _showStatisticsDialog();
+                                  }
+                                },
+                              ),
+                              const Icon(Icons.play_arrow),
+                            ],
+                          ),
+                          onTap: () async {
+                            resumableGames.removeAt(entry.key);
+                            await WeliStorage.setString(resumableGamesStorageKey, jsonEncode(resumableGames));
+                            if (mounted) {
+                              Navigator.pop(context);
+                              _openSavedGameData(game);
+                            }
+                          },
                         ),
                       );
                     }),
@@ -1410,7 +1495,24 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                         dense: true,
                         title: Text(title),
                         subtitle: Text('Runden: ${mapItem['roundCount'] ?? 0} · antippen für Schulden'),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Löschen',
+                              icon: const Icon(Icons.delete_outline, color: AppPalette.danger),
+                              onPressed: () async {
+                                history.removeAt(historyEntry.key);
+                                await WeliStorage.setString(gameHistoryStorageKey, jsonEncode(history));
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  _showStatisticsDialog();
+                                }
+                              },
+                            ),
+                            const Icon(Icons.chevron_right),
+                          ],
+                        ),
                         onTap: () {
                           Navigator.pop(context);
                           _showHistoricalGameDetails(mapItem, historyEntry.key);
@@ -1967,13 +2069,6 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
             icon: const Icon(Icons.leaderboard_outlined),
           ),
           IconButton(
-            tooltip: 'Spiel beenden',
-            onPressed: () {
-              _finishGame();
-            },
-            icon: const Icon(Icons.stop_circle_outlined),
-          ),
-          IconButton(
             tooltip: 'Statistik',
             onPressed: () {
               _showStatisticsDialog();
@@ -2439,7 +2534,6 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                   Row(
                     children: [
                       Expanded(
-                        flex: 5,
                         child: ElevatedButton(
                           onPressed: () {
                             if (selectedPlayer != null &&
@@ -2464,7 +2558,6 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        flex: 5,
                         child: ElevatedButton(
                           onPressed: () {
                             endRound();
@@ -2486,6 +2579,47 @@ class _PlayersTablePageState extends State<PlayersTablePage> {
                               fontWeight: FontWeight.w900,
                               fontSize: 15,
                             ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _saveCurrentGameSnapshot,
+                          icon: const Icon(Icons.save_outlined, size: 18),
+                          label: const Text(
+                            'SPEICHERN',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                          ),
+                          style: appButtonStyle(
+                            backgroundColor: AppPalette.surfaceAlt,
+                            foregroundColor: AppPalette.primary,
+                            borderColor: AppPalette.border,
+                            minimumSize: const Size(48, 52),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            _finishGame();
+                          },
+                          icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                          label: const Text(
+                            'BEENDEN',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                          ),
+                          style: appButtonStyle(
+                            backgroundColor: AppPalette.warning,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(48, 52),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                           ),
                         ),
                       ),
